@@ -174,13 +174,11 @@ class HealthKitController {
             
             // Update the data on the main queue.
             // DispatchQueue.main.async
-            await MainActor.run {
-                // Update the model.
-                // newDrinks is a captured variable -- shared mutable state
-                // needs to run on the main thread
-                self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
-            }
-
+            // await MainActor.run {}
+            // self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
+            
+            // await is used on a synchronous function Model but must suspend to get on the main dispach que
+            await self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
             return true
         } catch {
             self.logger.error("An error occurred while querying for samples: \(error.localizedDescription)")
@@ -261,8 +259,12 @@ class HealthKitController {
     }
     
     // Update the model.
+    // let the compiler do this for you.
+    @MainActor
     private func updateModel(newDrinks: [Drink], deletedDrinks: Set<UUID>) {
-        assert(Thread.main == Thread.current, "Must be run on the main queue because it accesses currentDrinks.")
+        // func is running on the main thread !!!
+        // assert(Thread.main == Thread.current, "Must be run on the main queue because it accesses currentDrinks.")
+        // no longer needed with @MainAtor
         
         guard !newDrinks.isEmpty && !deletedDrinks.isEmpty else {
             logger.debug("No drinks to add or delete from HealthKit.")
