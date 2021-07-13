@@ -1,9 +1,9 @@
 /*
-See LICENSE folder for this sample’s licensing information.
-
-Abstract:
-A data controller that manages reading and writing data from the HealthKit store.
-*/
+ See LICENSE folder for this sample’s licensing information.
+ 
+ Abstract:
+ A data controller that manages reading and writing data from the HealthKit store.
+ */
 
 import Foundation
 import HealthKit
@@ -153,7 +153,7 @@ class HealthKitController {
     }
     
     // Save a drink to HealthKit as a caffeine sample.
-    public func save(drink: Drink) {
+    public func save(drink: Drink) async {
         
         // Make sure HealthKit is available and authorized.
         guard isAvailable else { return }
@@ -163,7 +163,7 @@ class HealthKitController {
         // Use the sync identifier to remove drinks if they are deleted from
         // HealthKit.
         let metadata: [String: Any] = [HKMetadataKeySyncIdentifier: drink.uuid.uuidString,
-                                       HKMetadataKeySyncVersion: 1]
+                                          HKMetadataKeySyncVersion: 1]
         
         // Create a quantity object for the amount of caffeine in the drink.
         let mgCaffeine = HKQuantity(unit: miligrams, doubleValue: drink.mgCaffeine)
@@ -176,13 +176,13 @@ class HealthKitController {
                                               metadata: metadata)
         
         // Save the sample to the HealthKit store.
-        store.save(caffeineSample) { success, error in
-            guard success else {
-                self.logger.error("Unable to save \(caffeineSample) to the HealthKit store: \(error!.localizedDescription)")
-                return
-            }
-            
+        // takes a completion handler with success and error (remember to unwrap error)
+        // We want to throw!
+        do {
+            try await store.save(caffeineSample)
             self.logger.debug("\(mgCaffeine) mg Drink saved to HealthKit")
+        } catch {
+            self.logger.error("Unable to save \(caffeineSample) to the HealthKit store: \(error.localizedDescription)")
         }
     }
     
@@ -220,7 +220,7 @@ class HealthKitController {
         }
         
         logger.debug("\(uuidsToDelete.count) drinks deleted from HealthKit.")
-
+        
         return Set(uuidsToDelete)
     }
     
