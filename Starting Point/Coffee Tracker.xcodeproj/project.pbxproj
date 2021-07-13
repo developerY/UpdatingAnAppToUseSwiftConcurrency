@@ -69,7 +69,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		431440C68D495BD7CDB87FEC /* SampleCode.xcconfig */ = {isa = PBXFileReference; name = SampleCode.xcconfig; path = ../Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
+		431440C68D495BD7CDB87FEC /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = ../Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
+		69F9E65C269D17B300573B85 /* Arch.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Arch.png; path = ../../../../Desktop/Arch.png; sourceTree = "<group>"; };
 		93B81FF024D3947E00D180A1 /* CoffeeTrackerApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoffeeTrackerApp.swift; sourceTree = "<group>"; };
 		93E5EEE0245A2BCC00F95BA0 /* Coffee Tracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Coffee Tracker.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		93E5EEE4245A2BCC00F95BA0 /* Coffee Tracker WatchKit App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Coffee Tracker WatchKit App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -92,7 +93,7 @@
 		93E5EF1F245A2C5100F95BA0 /* Drink.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Drink.swift; sourceTree = "<group>"; };
 		93E5EF2A245A2E2800F95BA0 /* Coffee Tracker WatchKit Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Coffee Tracker WatchKit Extension.entitlements"; sourceTree = "<group>"; };
 		93E5EF2C245A2E2800F95BA0 /* HealthKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HealthKit.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS6.2.sdk/System/Library/Frameworks/HealthKit.framework; sourceTree = DEVELOPER_DIR; };
-		ADEA760596734A634F034C37 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; path = LICENSE.txt; sourceTree = "<group>"; };
+		ADEA760596734A634F034C37 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -107,9 +108,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		69F9E65B269D176100573B85 /* Info */ = {
+			isa = PBXGroup;
+			children = (
+				69F9E65C269D17B300573B85 /* Arch.png */,
+			);
+			path = Info;
+			sourceTree = "<group>";
+		};
 		93E5EED9245A2BCC00F95BA0 = {
 			isa = PBXGroup;
 			children = (
+				69F9E65B269D176100573B85 /* Info */,
 				93E5EF13245A2C1300F95BA0 /* README.md */,
 				93E5EEE8245A2BCC00F95BA0 /* Coffee Tracker WatchKit App */,
 				93E5EEF7245A2BCE00F95BA0 /* Coffee Tracker WatchKit Extension */,
