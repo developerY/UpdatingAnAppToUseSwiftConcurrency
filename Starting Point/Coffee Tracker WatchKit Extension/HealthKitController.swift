@@ -86,6 +86,7 @@ actor HealthKitController {
     // Request authorization to read and save the required data types.
     // these are not a part of the Actor protected state so they can be called from other parts of the code
     @available(*, deprecated, message: "Prefer async alternative instead")
+    // do not change actor state -- not part of the actor protected state
     nonisolated public func requestAuthorization(completionHandler: @escaping (Bool) -> Void ) {
         async {
             let result = await requestAuthorization()
@@ -113,7 +114,9 @@ actor HealthKitController {
     
     // Async reads data from the HealthKit store.
     @available(*, deprecated, message: "Prefer async alternative instead")
+    // do not change actor state -- not part of the actor protected state -- can be called from outside actor
     nonisolated public func loadNewDataFromHealthKit( completionHandler: @escaping (Bool) -> Void = { _ in }) {
+        // print (isAuthorized) // uncommnt to see error
         async { completionHandler(await self.loadNewDataFromHealthKit())}
     }
     
