@@ -138,6 +138,38 @@ class CoffeeData: ObservableObject {
         async { await self.healthKitController.save(drink: drink) }
     }
     
+    // Update the model.
+    // let the compiler do this for you.
+    @MainActor
+    public func updateModel(newDrinks: [Drink], deletedDrinks: Set<UUID>) {
+        // func is running on the main thread !!!
+        // assert(Thread.main == Thread.current, "Must be run on the main queue because it accesses currentDrinks.")
+        // no longer needed with @MainAtor
+        
+        guard !newDrinks.isEmpty && !deletedDrinks.isEmpty else {
+            logger.debug("No drinks to add or delete from HealthKit.")
+            return
+        }
+        
+        // Get a copy of the current drink data.
+        // Actor-isolated property 'model' can not be referenced from synchronous context of global actor 'MainActor'
+        // touching a stored propety ( model property )
+        // Actor protects it's state and will not allow functions not an the actor access that state
+        
+        // guard let oldDrinks = model?.currentDrinks else { return }
+        
+        // Remove the deleted drinks.
+        var drinks = currentDrinks.filter { deletedDrinks.contains($0.uuid) }
+        
+        // Add the new drinks.
+        drinks += newDrinks
+        
+        // Sort the array by date.
+        drinks.sort { $0.date < $1.date }
+        // Actor-isolated property 'model' can not be referenced from synchronous context of global actor 'MainActor'
+        currentDrinks = drinks
+    }
+    
     // MARK: - Private Methods
     
     // The model's initializer. Do not call this method.
@@ -235,6 +267,7 @@ class CoffeeData: ObservableObject {
                 currentDrinks = drinks
                 
                 // Load new data from HealthKit.
+                // These do not touch any other parts of the actor state
                 self.healthKitController.requestAuthorization { (success) in
                     guard success else {
                         logger.debug("Unable to authorize HealthKit.")

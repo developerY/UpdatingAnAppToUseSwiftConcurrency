@@ -23,7 +23,9 @@ private let types: Set<HKSampleType> = [caffeineType]
 // Milligram units.
 private let miligrams = HKUnit.gramUnit(with: .milli)
 
-class HealthKitController {
+
+// really the backend of the app
+actor HealthKitController {
     
     let logger = Logger(subsystem: "com.example.apple-samplecode.Coffee-Tracker.watchkitapp.watchkitextension.HealthKitController",
                         category: "HealthKit")
@@ -82,8 +84,9 @@ class HealthKitController {
     // MARK: - Public Methods
     
     // Request authorization to read and save the required data types.
+    // these are not a part of the Actor protected state so they can be called from other parts of the code
     @available(*, deprecated, message: "Prefer async alternative instead")
-    public func requestAuthorization(completionHandler: @escaping (Bool) -> Void ) {
+    nonisolated public func requestAuthorization(completionHandler: @escaping (Bool) -> Void ) {
         async {
             let result = await requestAuthorization()
             completionHandler(result)
@@ -110,7 +113,7 @@ class HealthKitController {
     
     // Async reads data from the HealthKit store.
     @available(*, deprecated, message: "Prefer async alternative instead")
-    public func loadNewDataFromHealthKit( completionHandler: @escaping (Bool) -> Void = { _ in }) {
+    nonisolated public func loadNewDataFromHealthKit( completionHandler: @escaping (Bool) -> Void = { _ in }) {
         async { completionHandler(await self.loadNewDataFromHealthKit())}
     }
     
@@ -178,7 +181,7 @@ class HealthKitController {
             // self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
             
             // await is used on a synchronous function Model but must suspend to get on the main dispach que
-            await self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
+            await model?.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
             return true
         } catch {
             self.logger.error("An error occurred while querying for samples: \(error.localizedDescription)")
@@ -258,31 +261,4 @@ class HealthKitController {
         return Set(uuidsToDelete)
     }
     
-    // Update the model.
-    // let the compiler do this for you.
-    @MainActor
-    private func updateModel(newDrinks: [Drink], deletedDrinks: Set<UUID>) {
-        // func is running on the main thread !!!
-        // assert(Thread.main == Thread.current, "Must be run on the main queue because it accesses currentDrinks.")
-        // no longer needed with @MainAtor
-        
-        guard !newDrinks.isEmpty && !deletedDrinks.isEmpty else {
-            logger.debug("No drinks to add or delete from HealthKit.")
-            return
-        }
-        
-        // Get a copy of the current drink data.
-        guard let oldDrinks = model?.currentDrinks else { return }
-        
-        // Remove the deleted drinks.
-        var drinks = oldDrinks.filter { deletedDrinks.contains($0.uuid) }
-        
-        // Add the new drinks.
-        drinks += newDrinks
-        
-        // Sort the array by date.
-        drinks.sort { $0.date < $1.date }
-        
-        model?.currentDrinks = drinks
-    }
 }
