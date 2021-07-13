@@ -82,20 +82,29 @@ class HealthKitController {
     // MARK: - Public Methods
     
     // Request authorization to read and save the required data types.
+    @available(*, deprecated, message: "Prefer async alternative instead")
     public func requestAuthorization(completionHandler: @escaping (Bool) -> Void ) {
-        guard isAvailable else { return }
+        async {
+            let result = await requestAuthorization()
+            completionHandler(result)
+        }
+    }
+    
+    // this still could have race condtion issues
+    // Swift will automatically choose the correct async func
+    public func requestAuthorization() async -> Bool {
+        // we must return value
+        guard isAvailable else { return false }
         
-        store.requestAuthorization(toShare: types, read: types) { success, error in
-            
+        do {
+            try await store.requestAuthorization(toShare: types, read: types)
             // Check for any errors.
-            guard error == nil else {
-                self.logger.error("An error occurred while requesting HealthKit Authorization: \(error!.localizedDescription)")
-                return
-            }
-            
             // Set the authorization property, and call the handler.
-            self.isAuthorized = success
-            completionHandler(success)
+            self.isAuthorized = true
+            return true
+        } catch let error1 {
+            self.logger.error("An error occurred while requesting HealthKit Authorization: \(error1.localizedDescription)")
+            return false
         }
     }
     
