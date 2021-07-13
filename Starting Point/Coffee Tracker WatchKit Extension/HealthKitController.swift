@@ -108,57 +108,84 @@ class HealthKitController {
         }
     }
     
-    // Reads data from the HealthKit store.
+    // Async reads data from the HealthKit store.
+    @available(*, deprecated, message: "Prefer async alternative instead")
     public func loadNewDataFromHealthKit( completionHandler: @escaping (Bool) -> Void = { _ in }) {
+        async { completionHandler(await self.loadNewDataFromHealthKit())}
+    }
+    
+    /*
+     This will make it async / thow and return the useful values
+     */
+    private func queryHealthKit() async throws -> ([HKSample]?, [HKDeletedObject]?, HKQueryAnchor?) {
+        return try await withCheckedThrowingContinuation { continuation in
+            // Create a predicate that only returns samples created within the last 24 hours.
+            let endDate = Date()
+            let startDate = endDate.addingTimeInterval(-24.0 * 60.0 * 60.0)
+            let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [.strictStartDate, .strictEndDate])
+            
+            // Create the query.
+            let query = HKAnchoredObjectQuery(
+                type: caffeineType,
+                predicate: datePredicate,
+                anchor: anchor,
+                limit: HKObjectQueryNoLimit) { (_, samples, deletedSamples, newAnchor, error) in
+                
+                // When the query ends, check for errors.
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: (samples, deletedSamples, newAnchor))
+                }
+            }
+            // we want to await the query
+            store.execute(query)
+        }
+    }
+    
+    // Reads data from the HealthKit store.
+    // Reads data from the HealthKit store.
+    @discardableResult
+    public func loadNewDataFromHealthKit() async -> Bool {
         
         guard isAvailable else {
             logger.debug("HealthKit is not available on this device.")
-            completionHandler(false)
-            return
+            return false
         }
         
         logger.debug("Loading data from HealthKit")
         
-        // Create a predicate that only returns samples created within the last 24 hours.
-        let endDate = Date()
-        let startDate = endDate.addingTimeInterval(-24.0 * 60.0 * 60.0)
-        let datePredicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate, options: [.strictStartDate, .strictEndDate])
-        
-        // Create the query.
-        let query = HKAnchoredObjectQuery(
-            type: caffeineType,
-            predicate: datePredicate,
-            anchor: anchor,
-            limit: HKObjectQueryNoLimit) { (_, samples, deletedSamples, newAnchor, error) in
-            
-            // When the query ends, check for errors.
-            if let error = error {
-                self.logger.error("An error occurred while querying for samples: \(error.localizedDescription)")
-                completionHandler(false)
-                return
-            }
-            
+        do {
+            let (samples, deletedSamples, newAnchor) = try await queryHealthKit()
             // Update the anchor.
             self.anchor = newAnchor
             
-            // Convert new caffeine samples into Drink instances.
-            var newDrinks: [Drink] = []
+            // Convert new caffeine samples into Drink instances
+            // create an immutalbe copy
+            let newDrinks: [Drink]
             if let samples = samples {
                 newDrinks = self.drinksToAdd(from: samples)
+            } else {
+                newDrinks = []
             }
             
             // Create a set of UUIDs for any samples deleted from HealthKit.
             let deletedDrinks = self.drinksToDelete(from: deletedSamples ?? [])
             
             // Update the data on the main queue.
-            DispatchQueue.main.async {
+            // DispatchQueue.main.async
+            await MainActor.run {
                 // Update the model.
+                // newDrinks is a captured variable -- shared mutable state
+                // needs to run on the main thread
                 self.updateModel(newDrinks: newDrinks, deletedDrinks: deletedDrinks)
-                completionHandler(true)
             }
+
+            return true
+        } catch {
+            self.logger.error("An error occurred while querying for samples: \(error.localizedDescription)")
+            return false
         }
-        
-        store.execute(query)
     }
     
     // Save a drink to HealthKit as a caffeine sample.
