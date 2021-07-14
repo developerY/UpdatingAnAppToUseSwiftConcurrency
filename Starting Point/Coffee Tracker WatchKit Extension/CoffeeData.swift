@@ -231,7 +231,10 @@ class CoffeeData: ObservableObject {
         // Save drink information to HealthKit.
         // everything here needs to be self contained
         // make sure you are not touching global state
-        async { await self.healthKitController.save(drink: drink) }
+        async {
+            await self.healthKitController.save(drink: drink)
+            await self.drinksUpdated()
+        }
     }
     
     // Update the model.
