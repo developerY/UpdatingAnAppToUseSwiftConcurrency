@@ -49,7 +49,7 @@ private actor CoffeeDataStore {
             try data.write(to: self.dataURL, options: [.atomic])
 
             // Update the saved value.
-            savedValue = currentDrinks
+            self.savedValue = currentDrinks
             
             self.logger.debug("Saved!")
         } catch {
@@ -63,7 +63,7 @@ private actor CoffeeDataStore {
         // Read the data from a background queue. This is using global reasoning ... better use the actor
         logger.debug("Loading the model.")
     
-        var drinks: [Drink]
+        let drinks: [Drink]
         
         do {
             // Load the drink data from a binary plist file.
